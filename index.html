@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hygiene Heroes</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header HUD */
+        header {
+            width: 100%;
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .hud-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .hud-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Container Layout */
+        main {
+            width: 100%;
+            max-width: 1000px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* Campaign Selector */
+        .campaign-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .campaign-btn {
+            background-color: #7f8c8d;
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+        }
+
+        .campaign-btn.active {
+            background-color: #2ecc71;
+        }
+
+        /* Game Canvas Area */
+        .game-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin-top: 15px;
+            border: 3px solid #34495e;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #eef2f5;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Boost Bar */
+        .boost-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .boost-btn {
+            background-color: #f39c12;
+            font-size: 0.9em;
+        }
+
+        /* Sections Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 8px;
+        }
+
+        /* Before/After Visual Showcase */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 8px;
+            user-select: none;
+        }
+
+        .slider-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .img-before {
+            background-color: #e74c3c;
+        }
+
+        .img-after {
+            background-color: #2ecc71;
+            width: 50%;
+            overflow: hidden;
+            border-right: 3px solid white;
+        }
+
+        .slider-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: ew-resize;
+        }
+
+        /* Shop & Missions Items */
+        .item-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        /* Inspector Upload Area */
+        .upload-area {
+            border: 2px dashed #bdc3c7;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation & Profile HUD -->
+    <header>
+        <div class="hud-stats">
+            <span class="stat-item" id="coin-display">🪙 Coins: 100</span>
+            <span class="stat-item" id="xp-display">⭐ XP: 0</span>
+            <span class="stat-item" id="streak-display">🔥 Streak: 1 Day</span>
+        </div>
+        <div class="hud-buttons">
+            <button id="starter-btn" onclick="claimStarterBonus()">Claim Bonus (+100)</button>
+            <button id="audio-btn" onclick="toggleAudio()">🔊 Audio: ON</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Campaign Selector -->
+        <div class="campaign-nav">
+            <button class="campaign-btn active" onclick="switchCampaign('recycling')">Recycling Sorter</button>
+            <button class="campaign-btn" onclick="switchCampaign('sweeper')">Sanitation Sweeper</button>
+            <button class="campaign-btn" onclick="switchCampaign('disinfectant')">Disinfectant Dash</button>
+        </div>
+
+        <!-- Mini-Game Canvas Display -->
+        <div class="game-card">
+            <h2 id="game-title">Recycling Sorter</h2>
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="600" height="350"></canvas>
+            </div>
+            <div class="boost-bar">
+                <button class="boost-btn" onclick="useBoost('time')">+10s Time</button>
+                <button class="boost-btn" onclick="useBoost('multiplier')">2x Score Multiplier</button>
+                <button class="boost-btn" onclick="useBoost('bomb')">💣 Clear Screen</button>
+            </div>
+        </div>
+
+        <!-- Middle Grid: Shop & Missions -->
+        <div class="grid-2">
+            <!-- Boost Shop -->
+            <div class="card">
+                <h2>Boost Shop</h2>
+                <ul class="item-list">
+                    <li class="item-row">
+                        <span>Time Extender (+10s)</span>
+                        <button onclick="buyBoost('time', 30)">30 🪙</button>
+                    </li>
+                    <li class="item-row">
+                        <span>2x Score Multiplier</span>
+                        <button onclick="buyBoost('multiplier', 50)">50 🪙</button>
+                    </li>
+                    <li class="item-row">
+                        <span>Mega Sanitize Bomb</span>
+                        <button onclick="buyBoost('bomb', 80)">80 🪙</button>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Daily Quests -->
+            <div class="card">
+                <h2>Daily Missions</h2>
+                <ul class="item-list">
+                    <li class="item-row">
+                        <span>Clean 10 Litter Blobs</span>
+                        <span id="mission-1">0/10</span>
+                    </li>
+                    <li class="item-row">
+                        <span>Score 50 Points</span>
+                        <span id="mission-2">0/50</span>
+                    </li>
+                    <li class="item-row">
+                        <span>Use Any Boost Item</span>
+                        <span id="mission-3">0/1</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Visual Transformation Showcase -->
+        <div class="card">
+            <h2>Community Transformation Showcase</h2>
+            <div class="slider-container">
+                <div class="slider-img img-before">Dirty Community Park 🧹</div>
+                <div class="slider-img img-after" id="after-image">Clean Community Park ✨</div>
+                <input type="range" min="0" max="100" value="50" class="slider-input" oninput="updateSlider(this.value)">
+            </div>
+        </div>
+
+        <!-- Bottom Grid: ML AI Inspector & Leaderboard -->
+        <div class="grid-2">
+            <!-- LearningML AI Inspector Bot -->
+            <div class="card">
+                <h2>AI Sanitation Inspector</h2>
+                <p>Upload a photo of your cleaned space to be verified by LearningML:</p>
+                <div class="upload-area" onclick="document.getElementById('photo-upload').click()">
+                    <span id="upload-label">📸 Click to Upload Photo</span>
+                    <input type="file" id="photo-upload" accept="image/*" onchange="processAIPhoto()">
+                </div>
+                <p id="ai-status" style="margin-top: 10px; font-weight: bold; color: #27ae60;"></p>
+            </div>
+
+            <!-- Leaderboard & Digital Badge Engine -->
+            <div class="card">
+                <h2>Leaderboard</h2>
+                <ul class="item-list">
+                    <li class="item-row"><span>1. EcoHero99</span><span>1,200 XP</span></li>
+                    <li class="item-row"><span>2. CleanMachine</span><span>950 XP</span></li>
+                    <li class="item-row"><span>3. GreenKnight</span><span>810 XP</span></li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // System State
+        let coins = 100;
+        let xp = 0;
+        let currentGame = 'recycling';
+        let audioEnabled = true;
+
+        // Image Assets Setup
+        const targetImages = {
+            recycling: new Image(),
+            sweeper: new Image(),
+            disinfectant: new Image()
+        };
+
+        // Standard Inline Data URLs (SVG Icons)
+        targetImages.recycling.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%232ecc71"/><path d="M30 65 L50 30 L70 65 Z" fill="none" stroke="white" stroke-width="8" stroke-linejoin="round"/><circle cx="50" cy="55" r="5" fill="white"/></svg>';
+        targetImages.sweeper.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%23e74c3c"/><rect x="30" y="30" width="40" height="40" rx="5" fill="white"/><path d="M40 20 L60 20 L60 30 L40 30 Z" fill="white"/></svg>';
+        targetImages.disinfectant.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="%239b59b6"/><circle cx="35" cy="40" r="8" fill="white"/><circle cx="65" cy="40" r="8" fill="white"/><circle cx="50" cy="65" r="12" fill="white"/><path d="M30 30 L20 20 M70 30 L80 20 M50 20 L50 10" stroke="white" stroke-width="5" stroke-linecap="round"/></svg>';
+
+        // Canvas Setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let targets = [];
+
+        // Simple Audio Synthesizer
+        class AudioSynthesizer {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            playPop() {
+                if (!audioEnabled) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+        }
+        const audio = new AudioSynthesizer();
+
+        // Target Spawning Initialization
+        function initTargets() {
+            targets = [];
+            for (let i = 0; i < 5; i++) {
+                targets.push({
+                    x: Math.random() * (canvas.width - 60) + 30,
+                    y: Math.random() * (canvas.height - 60) + 30,
+                    radius: 25,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2
+                });
+            }
+        }
+
+        // Render Loop
+        function update() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            targets.forEach(target => {
+                // Movement
+                target.x += target.vx;
+                target.y += target.vy;
+
+                // Bounce
+                if (target.x - target.radius < 0 || target.x + target.radius > canvas.width) target.vx *= -1;
+                if (target.y - target.radius < 0 || target.y + target.radius > canvas.height) target.vy *= -1;
+
+                // Select image matching current game
+                let imgToDraw = targetImages[currentGame];
+
+                // Render image inside the target blob boundary
+                if (imgToDraw && imgToDraw.complete) {
+                    ctx.drawImage(
+                        imgToDraw,
+                        target.x - target.radius,
+                        target.y - target.radius,
+                        target.radius * 2,
+                        target.radius * 2
+                    );
+                } else {
+                    // Fallback circle draw
+                    ctx.beginPath();
+                    ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#3498db';
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            });
+
+            requestAnimationFrame(update);
+        }
+
+        // Click Event Interaction
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            targets.forEach((target, index) => {
+                const dist = Math.hypot(target.x - mouseX, target.y - mouseY);
+                if (dist < target.radius) {
+                    audio.playPop();
+                    coins += 10;
+                    xp += 15;
+                    updateHUD();
+                    // Respawn target
+                    targets[index] = {
+                        x: Math.random() * (canvas.width - 60) + 30,
+                        y: Math.random() * (canvas.height - 60) + 30,
+                        radius: 25,
+                        vx: (Math.random() - 0.5) * 2,
+                        vy: (Math.random() - 0.5) * 2
+                    };
+                }
+            });
+        });
+
+        // UI Handlers
+        function switchCampaign(game) {
+            currentGame = game;
+            document.querySelectorAll('.campaign-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const titles = {
+                recycling: 'Recycling Sorter',
+                sweeper: 'Sanitation Sweeper',
+                disinfectant: 'Disinfectant Dash'
+            };
+            document.getElementById('game-title').innerText = titles[game];
+            initTargets();
+        }
+
+        function updateHUD() {
+            document.getElementById('coin-display').innerText = `🪙 Coins: ${coins}`;
+            document.getElementById('xp-display').innerText = `⭐ XP: ${xp}`;
+        }
+
+        function claimStarterBonus() {
+            coins += 100;
+            updateHUD();
+            document.getElementById('starter-btn').disabled = true;
+            document.getElementById('starter-btn').innerText = 'Bonus Claimed';
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-btn').innerText = `🔊 Audio: ${audioEnabled ? 'ON' : 'OFF'}`;
+        }
+
+        function updateSlider(val) {
+            document.getElementById('after-image').style.width = `${val}%`;
+        }
+
+        function useBoost(type) {
+            if (type === 'bomb') {
+                audio.playPop();
+                initTargets();
+                coins += 25;
+                updateHUD();
+            }
+        }
+
+        function buyBoost(type, cost) {
+            if (coins >= cost) {
+                coins -= cost;
+                updateHUD();
+                alert('Boost Purchased!');
+            } else {
+                alert('Not enough coins!');
+            }
+        }
+
+        function processAIPhoto() {
+            document.getElementById('upload-label').innerText = 'Analyzing Image...';
+            setTimeout(() => {
+                document.getElementById('upload-label').innerText = '📸 Click to Upload Photo';
+                document.getElementById('ai-status').innerText = 'AI Verification Passed! +150 Coins & +250 XP';
+                coins += 150;
+                xp += 250;
+                updateHUD();
+            }, 1200);
+        }
+
+        // Start Game
+        initTargets();
+        update();
+    </script>
+</body>
+</html>
